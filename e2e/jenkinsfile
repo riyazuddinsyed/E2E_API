@@ -66,7 +66,7 @@ def py3nodejs_label = "jenkins-py3nodejs-${UUID.randomUUID().toString()}"
                     stash includes: 'newman/*.xml', name: 'coops-api-postman-tests'
                 } // end dir
             } //end stage
-        } //end node
+    //end node
     } //end podTemplate
 
                         
