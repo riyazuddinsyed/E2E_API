@@ -25,15 +25,7 @@ def py3nodejs_label = "jenkins-py3nodejs-${UUID.randomUUID().toString()}"
             workingDir: 'e2e',
             command: '',
             args: '${computer.jnlpmac} ${computer.name}',
-            envVars: [
-                envVar(key:'BASEURL', value: "GIVE THE BASE URL"),
-                secretEnvVar(key: 'DEV_API_TEST_USER', secretName: 'apitest-secrets-dev', secretKey: 'username'),
-                secretEnvVar(key: 'DEV_API_TEST_PASSWORD', secretName: 'apitest-secrets-dev', secretKey: 'password'),
-                secretEnvVar(key: 'DEV_API_TEST_AUTH_SERVER', secretName: 'apitest-secrets-dev', secretKey: 'authurl'),
-                secretEnvVar(key: 'DEV_API_TEST_CLIENT_ID', secretName: 'apitest-secrets-dev', secretKey: 'clientid'),
-                secretEnvVar(key: 'DEV_API_TEST_CLIENT_SECRET', secretName: 'apitest-secrets-dev', secretKey: 'client_secret'),
-                secretEnvVar(key: 'DEV_API_TEST_NR', secretName: 'apitest-secrets-dev', secretKey: 'nr')
-            ]
+            envVars: []
         )
     ])
 {    
