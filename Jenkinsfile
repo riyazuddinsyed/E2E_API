@@ -53,9 +53,8 @@ def py3nodejs_label = "jenkins-py3nodejs-${UUID.randomUUID().toString()}"
                     sh '''
                          cd
                          npm install
-                         npm run test
                         npm install newman
-                        sh './node_modules/newman/bin/newman.js run .//INVOKE THE ENVIORNMENT FILE
+                        newman run Test.json
 }
                     junit 'newman/*.xml'
                     publishHTML (target: [
