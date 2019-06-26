@@ -10,7 +10,7 @@ def IMAGE_RUNTIME_NAME = 'coops-api-runtime'
 def DEV_DEPLOYMENT_NAME = 'coops-api'
 def DEV_TAG_NAME = 'dev'
 def DEV_NS = 'servicebc-ne-dev'//To change//
-import groovy.json.jsonOutput
+import groovy.json.JsonOutput
 
 // Edit your application's context directory here
 def CONTEXT_DIRECTORY = 'api'
