@@ -1,0 +1,78 @@
+
+// define constants
+def BUILDCFG_BASE ='coops-api-base'
+def IMAGE_BASE_NAME = 'coops-api-base'
+
+def BUILDCFG_RUNTIME ='coops-api-runtime'
+def IMAGE_RUNTIME_NAME = 'coops-api-runtime'
+
+def DEV_DEPLOYMENT_NAME = 'coops-api'
+def DEV_TAG_NAME = 'dev'
+def DEV_NS = 'servicebc-ne-dev'//To change//
+
+// Edit your application's context directory here
+def CONTEXT_DIRECTORY = 'api'
+
+def GIT_BRANCH_NAME = ("${env.JOB_BASE_NAME}".contains("master")) ? "master" : "develop"// check if its necessary
+def py3nodejs_label = "jenkins-py3nodejs-${UUID.randomUUID().toString()}"
+    podTemplate(label: py3nodejs_label, name: py3nodejs_label, serviceAccount: 'jenkins', cloud: 'openshift', containers: [
+        containerTemplate(
+            name: 'jnlp',
+            image: '172.50.0.2:5000/openshift/jenkins-slave-py3nodejs',
+            resourceRequestCpu: '500m',
+            resourceLimitCpu: '1000m',
+            resourceRequestMemory: '1Gi',
+            resourceLimitMemory: '2Gi',
+            workingDir: '/tmp',
+            command: '',
+            args: '${computer.jnlpmac} ${computer.name}',
+            envVars: [
+                envVar(key:'BASEURL', value: "GIVE THE BASE URL"),
+                secretEnvVar(key: 'DEV_API_TEST_USER', secretName: 'apitest-secrets-dev', secretKey: 'username'),
+                secretEnvVar(key: 'DEV_API_TEST_PASSWORD', secretName: 'apitest-secrets-dev', secretKey: 'password'),
+                secretEnvVar(key: 'DEV_API_TEST_AUTH_SERVER', secretName: 'apitest-secrets-dev', secretKey: 'authurl'),
+                secretEnvVar(key: 'DEV_API_TEST_CLIENT_ID', secretName: 'apitest-secrets-dev', secretKey: 'clientid'),
+                secretEnvVar(key: 'DEV_API_TEST_CLIENT_SECRET', secretName: 'apitest-secrets-dev', secretKey: 'client_secret'),
+                secretEnvVar(key: 'DEV_API_TEST_NR', secretName: 'apitest-secrets-dev', secretKey: 'nr')
+            ]
+        )
+    ])
+{    
+        node (py3nodejs_label) {
+        
+            stage('Checkout') {
+                
+                    echo "checking out source"
+                    echo "Build: ${BUILD_ID}"
+                    checkout scm              
+            }
+
+            stage ('Running API Tests') {
+                echo "Running tests "
+                
+                    sh '''
+                         cd
+                         npm install
+                         npm run test
+                        npm install newman
+                        sh './node_modules/newman/bin/newman.js run .//INVOKE THE ENVIORNMENT FILE
+}
+                    junit 'newman/*.xml'
+                    publishHTML (target: [
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: false,
+                        keepAll: true,
+                        reportDir: 'newman',
+                        reportFiles: 'newman*.html',
+                        reportName: "API Test Report"
+                    ])
+                    stash includes: 'newman/*.xml', name: 'coops-api-postman-tests'
+                } // end dir
+            } //end stage
+        } //end node
+    } //end podTemplate
+
+                        
+            }
+    }
+}
