@@ -1,5 +1,6 @@
 
 // define constants
+echo "hello"
 def BUILDCFG_BASE ='coops-api-base'
 def IMAGE_BASE_NAME = 'coops-api-base'
 
