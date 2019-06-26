@@ -1,6 +1,5 @@
 
 // define constants
-import groovy.json.jsonOutput
 echo "hello"
 def BUILDCFG_BASE ='coops-api-base'
 def IMAGE_BASE_NAME = 'coops-api-base'
@@ -11,6 +10,7 @@ def IMAGE_RUNTIME_NAME = 'coops-api-runtime'
 def DEV_DEPLOYMENT_NAME = 'coops-api'
 def DEV_TAG_NAME = 'dev'
 def DEV_NS = 'servicebc-ne-dev'//To change//
+import groovy.json.jsonOutput
 
 // Edit your application's context directory here
 def CONTEXT_DIRECTORY = 'api'
