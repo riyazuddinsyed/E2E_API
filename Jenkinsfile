@@ -44,7 +44,8 @@ def py3nodejs_label = "jenkins-py3nodejs-${UUID.randomUUID().toString()}"
                 
                     echo "checking out source"
                     echo "Build: ${BUILD_ID}"
-                    checkout scm              
+                    checkout scm 
+                dir(e2e/test.json)
             }
 
             stage ('Running API Tests') {
