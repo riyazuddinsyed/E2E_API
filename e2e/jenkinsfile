@@ -11,7 +11,6 @@ def DEV_NS = 'servicebc-ne-dev'//To change//
 
 // define constants
 echo "hello"
-import groovy.json.JsonOutput
 
 // Edit your application's context directory here
 def CONTEXT_DIRECTORY = 'api'
