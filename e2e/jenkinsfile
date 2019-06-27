@@ -1,38 +1,101 @@
 
+
 // define constants
-echo "hello"
-def BUILDCFG_BASE ='coops-api-base'
-def IMAGE_BASE_NAME = 'coops-api-base'
+def COMPONENT_NAME = 'e2e-api'
+def TAG_NAME = 'dev'
+def NAMESPACE = 'gl2uos'
 
-def BUILDCFG_RUNTIME ='coops-api-runtime'
-def IMAGE_RUNTIME_NAME = 'coops-api-runtime'
-
-def DEV_DEPLOYMENT_NAME = 'coops-api'
-def DEV_TAG_NAME = 'dev'
-def DEV_NS = 'servicebc-ne-dev'//To change//
+// define groovy functions
 import groovy.json.JsonOutput
 
-// Edit your application's context directory here
-def CONTEXT_DIRECTORY = 'api'
-def py3nodejs_label = "jenkins-py3nodejs-${UUID.randomUUID().toString()}"
-    podTemplate(label: py3nodejs_label, name: py3nodejs_label, serviceAccount: 'jenkins', cloud: 'openshift', containers: [
-        containerTemplate(
-            name: 'jnlp',
-            image: '172.50.0.2:5000/openshift/jenkins-slave-py3nodejs',
-            resourceRequestCpu: '500m',
-            resourceLimitCpu: '1000m',
-            resourceRequestMemory: '1Gi',
-            resourceLimitMemory: '2Gi',
-            workingDir: 'e2e',
-            command: '',
-            args: '${computer.jnlpmac} ${computer.name}',
-            envVars: []
-        )
-    ])
-{    
-        node (py3nodejs_label) {
-        
-            stage('Checkout') {
+// Determine whether there were any changes the files within the project's context directory.
+// return a string listing commit msgs occurred since last build
+@NonCPS
+String triggerBuild(String contextDirectory) {
+    // Determine if code has changed within the source context directory.
+    def changeLogSets = currentBuild.changeSets
+    def filesChangeCnt = 0
+    MAX_MSG_LEN = 512
+    def changeString = ""
+    for (int i = 0; i < changeLogSets.size(); i++) {
+        def entries = changeLogSets[i
+        ].items
+        for (int j = 0; j < entries.length; j++) {
+            def entry = entries[j
+            ]
+            //echo "${entry.commitId} by ${entry.author} on ${new Date(entry.timestamp)}: ${entry.msg}"
+            def files = new ArrayList(entry.affectedFiles)
+
+            for (int k = 0; k < files.size(); k++) {
+                def file = files[k
+                ]
+                def filePath = file.path
+                //echo ">> ${file.path}"
+                if (filePath.contains(contextDirectory)) {
+
+                    filesChangeCnt = 1
+                    truncated_msg = entry.msg.take(MAX_MSG_LEN)
+                    changeString += " - ${truncated_msg} [${entry.author}]\n"
+                    k = files.size()
+                    j = entries.length
+                }
+            }
+        }
+    }
+    if ( filesChangeCnt < 1 ) {
+        echo('The changes do not require a build.')
+        return ""
+    }
+    else {
+        echo('The changes require a build.')
+        return changeString
+    }
+}
+// Get an image's hash tag
+String getImageTagHash(String imageName, String tag = "") {
+
+  if(!tag?.trim()) {
+    tag = "latest"
+  }
+
+  def istag = openshift.raw("get istag ${imageName}:${tag} -o template --template='{{.image.dockerImageReference}}'")
+  return istag.out.tokenize('@')[1].trim()
+}
+
+// pipeline
+// define job properties - keep 10 builds only
+properties([
+    [$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10'
+        ]
+    ]
+])
+
+def run_pipeline = true
+if( triggerBuild(COMPONENT_NAME) == "" ) {
+    node {
+        try {
+            timeout(time: 1, unit: 'DAYS') {
+                input message: "Run ${COMPONENT_NAME}-${TAG_NAME}-pipeline?", id: "1234", submitter: 'admin,thorwolpert-admin,rarmitag-admin,kialj876-edit,katiemcgoff-edit,WalterMoar-admin'
+            }
+        } catch (Exception e) {
+            run_pipeline = false;
+        }
+    }
+}
+if (!run_pipeline) {
+    echo('No Build Wanted - End of Build.')
+    currentBuild.result = 'SUCCESS'
+    return
+}
+
+node {
+    stage("Build ${COMPONENT_NAME}") {
+      script {
+        openshift.withCluster() {
+          openshift.withProject() {
+
+            echo "Building ${COMPONENT_NAME} ..."
+             stage('Checkout') {
                 
                     echo "checking out source"
                     echo "Build: ${BUILD_ID}"
@@ -47,15 +110,10 @@ def py3nodejs_label = "jenkins-py3nodejs-${UUID.randomUUID().toString()}"
                         npm install newman
                         newman run Test.json
 }
-                    junit 'newman/*.xml'
-                    publishHTML (target: [
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: false,
-                        keepAll: true,
-                        reportDir: 'newman',
-                        reportFiles: 'newman*.html',
-                        reportName: "API Test Report"
-                    ])
-                    stash includes: 'newman/*.xml', name: 'coops-api-postman-tests'
-                } // end dir
-            } //end stage
+            def build = openshift.selector("bc", "${COMPONENT_NAME}")
+            build.startBuild("--wait=true").logs("-f")
+          }
+        }
+      }
+    }
+   
