@@ -43,7 +43,6 @@ def py3nodejs_label = "jenkins-py3nodejs-${UUID.randomUUID().toString()}"
                 echo "Running tests "
                 
                     sh '''
-                         npm install
                         npm install newman
                         newman run Test.json
 }
