@@ -1,5 +1,6 @@
 
 
+
 // define constants
 def COMPONENT_NAME = 'e2e-api'
 def TAG_NAME = 'dev'
@@ -95,25 +96,10 @@ node {
           openshift.withProject() {
 
             echo "Building ${COMPONENT_NAME} ..."
-             stage('Checkout') {
-                
-                    echo "checking out source"
-                    echo "Build: ${BUILD_ID}"
-                    checkout scm '''
-            }
-
-            stage ('Running API Tests') {
-                echo "Running tests "
-                
-                    sh '''
-                         npm install
-                        npm install newman
-                        newman run Test.json
-}
             def build = openshift.selector("bc", "${COMPONENT_NAME}")
             build.startBuild("--wait=true").logs("-f")
           }
         }
       }
     }
-   }
+   
