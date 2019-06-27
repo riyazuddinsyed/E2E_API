@@ -1,4 +1,12 @@
+def BUILDCFG_BASE ='coops-api-base'
+def IMAGE_BASE_NAME = 'coops-api-base'
 
+def BUILDCFG_RUNTIME ='coops-api-runtime'
+def IMAGE_RUNTIME_NAME = 'coops-api-runtime'
+
+def DEV_DEPLOYMENT_NAME = 'coops-api'
+def DEV_TAG_NAME = 'dev'
+def DEV_NS = 'servicebc-ne-dev'//To change//
 
 
 // define constants
